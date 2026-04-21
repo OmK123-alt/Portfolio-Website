@@ -165,6 +165,10 @@ app.put('/api/admin/contact', verifyToken, (req, res) => {
 });
 
 // Health check
+app.get('/', (req, res) => {
+  res.json({ status: '✅ Backend is running!', message: 'Use /api/* endpoints for data access.' });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: '✅ Backend is running!' });
 });
