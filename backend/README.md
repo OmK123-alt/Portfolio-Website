@@ -22,6 +22,16 @@ Runs on: http://localhost:5000
    - `JWT_SECRET`
 4. Deploy — Vercel auto-detects `vercel.json`
 
+## Frontend Connection
+
+Set the frontend environment variable `VITE_API_URL` to the deployed backend project URL, for example:
+
+```bash
+VITE_API_URL=https://YOUR-BACKEND-PROJECT.vercel.app/api
+```
+
+Do not point the frontend at the frontend deployment domain itself.
+
 ## Environment Variables
 
 | Variable        | Description                        |
