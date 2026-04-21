@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, 'data.json');
+const IS_VERCEL = process.env.VERCEL === '1';
 
 // Default portfolio data structure
 const DEFAULT_DATA = {
@@ -122,31 +123,75 @@ const DEFAULT_DATA = {
   }
 };
 
+const cloneDefaultData = () => JSON.parse(JSON.stringify(DEFAULT_DATA));
+let useMemoryStore = false;
+let memoryData = cloneDefaultData();
+
 // Initialize database
 export function initDB() {
-  if (!fs.existsSync(DATA_FILE)) {
+  if (useMemoryStore) {
+    return;
+  }
+
+  if (fs.existsSync(DATA_FILE)) {
+    return;
+  }
+
+  if (IS_VERCEL) {
+    useMemoryStore = true;
+    memoryData = cloneDefaultData();
+    console.warn('Using in-memory data store on Vercel (non-persistent).');
+    return;
+  }
+
+  try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_DATA, null, 2));
     console.log('✅ Database initialized');
+  } catch (error) {
+    useMemoryStore = true;
+    memoryData = cloneDefaultData();
+    console.warn('Falling back to in-memory data store:', error.message);
   }
 }
 
 // Read data
 export function readData() {
+  if (useMemoryStore) {
+    return memoryData;
+  }
+
   try {
     const data = fs.readFileSync(DATA_FILE, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
+    if (IS_VERCEL || error.code === 'EROFS' || error.code === 'ENOENT') {
+      useMemoryStore = true;
+      memoryData = cloneDefaultData();
+      return memoryData;
+    }
+
     console.error('Error reading data:', error);
-    return DEFAULT_DATA;
+    return cloneDefaultData();
   }
 }
 
 // Write data
 export function writeData(data) {
+  if (useMemoryStore) {
+    memoryData = data;
+    return true;
+  }
+
   try {
     fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
     return true;
   } catch (error) {
+    if (IS_VERCEL || error.code === 'EROFS' || error.code === 'EACCES') {
+      useMemoryStore = true;
+      memoryData = data;
+      return true;
+    }
+
     console.error('Error writing data:', error);
     return false;
   }
