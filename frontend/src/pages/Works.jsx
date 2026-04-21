@@ -11,6 +11,27 @@ export default function Works({ works }) {
     ? works
     : works.filter(w => w.category === selectedCategory);
 
+  const renderVideo = (work) => {
+    if (work.videoType === 'upload' || work.videoFile) {
+      const videoSource = work.videoUrl || work.videoFile;
+      return (
+        <video controls preload="metadata" poster={work.thumbnail}>
+          <source src={videoSource} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      );
+    }
+
+    return (
+      <iframe
+        src={work.videoUrl}
+        title={work.title}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      ></iframe>
+    );
+  };
+
   return (
     <div className="works-page">
       <section className="works-hero section">
@@ -42,12 +63,7 @@ export default function Works({ works }) {
             {filteredWorks.map((work) => (
               <div key={work.id} className="work-card">
                 <div className="work-video-container">
-                  <iframe
-                    src={work.videoUrl}
-                    title={work.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+                  {renderVideo(work)}
                   <span className="work-duration">{work.duration}</span>
                 </div>
                 <div className="work-details">

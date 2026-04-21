@@ -7,10 +7,11 @@ import Home from './pages/Home';
 import Works from './pages/Works';
 import Skills from './pages/Skills';
 import Contact from './pages/Contact';
+import AdminPortal from './pages/AdminPortal';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-export default function App() {
+function PublicApp() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,7 +71,7 @@ export default function App() {
   }
 
   return (
-    <Router>
+    <>
       <Navbar profile={data?.profile} />
       <main>
         <Routes>
@@ -81,6 +82,17 @@ export default function App() {
         </Routes>
       </main>
       <Footer profile={data?.profile} />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/admin" element={<AdminPortal />} />
+        <Route path="/*" element={<PublicApp />} />
+      </Routes>
     </Router>
   );
 }
