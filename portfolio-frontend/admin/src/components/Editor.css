@@ -1,0 +1,193 @@
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.editor-section {
+  background: var(--bg-dark);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.editor-section h2,
+.editor-section h3 {
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+  font-size: 1.3rem;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+/* Skills List Editor */
+.skills-list-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+.skill-input-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.skill-input-row input {
+  flex: 1;
+}
+
+.skill-input-row .btn {
+  flex-shrink: 0;
+}
+
+/* Work Edit Card */
+.work-edit-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s;
+}
+
+.work-edit-card:hover {
+  border-color: var(--gold);
+}
+
+.work-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.work-header h3 {
+  color: var(--text);
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.work-category-badge {
+  background: rgba(201, 168, 76, 0.1);
+  color: var(--gold);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.work-edit-form {
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+.work-view {
+  padding: 1rem;
+  background: var(--surface);
+  border-radius: 6px;
+}
+
+.work-view p {
+  margin-bottom: 0.75rem;
+  color: var(--text-muted);
+}
+
+.work-view strong {
+  color: var(--text);
+}
+
+.work-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Link Editor */
+.link-editor {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.link-editor .form-row {
+  grid-template-columns: 80px 1fr;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .editor-container {
+    gap: 1rem;
+  }
+
+  .editor-section {
+    padding: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .link-editor .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .work-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .work-actions {
+    width: 100%;
+  }
+
+  .work-actions button {
+    flex: 1;
+  }
+
+  .skill-input-row {
+    flex-direction: column;
+  }
+
+  .skill-input-row input {
+    width: 100%;
+  }
+
+  .skill-input-row .btn {
+    width: 100%;
+  }
+}

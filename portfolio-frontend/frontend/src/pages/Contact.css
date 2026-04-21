@@ -1,0 +1,215 @@
+.contact-page {
+  background: var(--bg-dark);
+}
+
+.contact-hero {
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 4rem 0;
+}
+
+.contact-section {
+  background: var(--bg-dark);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 4rem;
+}
+
+/* Contact Methods */
+.contact-methods h2,
+.contact-form-container h2 {
+  color: var(--gold);
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+}
+
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.contact-link:hover {
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.08);
+  transform: translateX(8px);
+}
+
+.link-icon {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: rgba(201, 168, 76, 0.1);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.link-content {
+  flex: 1;
+}
+
+.link-name {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  margin-bottom: 0.3rem;
+}
+
+.link-value {
+  font-size: 1rem;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.link-arrow {
+  font-size: 1.2rem;
+  color: var(--gold);
+  transition: transform 0.3s;
+}
+
+.contact-link:hover .link-arrow {
+  transform: translateX(4px);
+}
+
+/* WhatsApp CTA */
+.whatsapp-cta {
+  margin-bottom: 2rem;
+}
+
+.whatsapp-btn {
+  width: 100%;
+  text-align: center;
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+
+.whatsapp-btn:hover {
+  opacity: 0.9;
+}
+
+/* Contact Form */
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group textarea {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: rgba(201, 168, 76, 0.05);
+  box-shadow: 0 0 10px rgba(201, 168, 76, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-submit {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
+
+/* Quick Info */
+.quick-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-title {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.info-value {
+  color: var(--gold);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .quick-info {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-link {
+    padding: 1.2rem;
+  }
+
+  .link-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+}
