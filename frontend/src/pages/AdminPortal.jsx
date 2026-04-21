@@ -5,7 +5,7 @@ import Dashboard from '../admin/pages/Dashboard';
 import '../admin/styles.css';
 import '../admin/components/Editor.css';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 export default function AdminPortal() {
   const [token, setToken] = useState(localStorage.getItem('admin_token'));

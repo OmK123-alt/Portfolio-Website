@@ -6,7 +6,7 @@ import SkillsEditor from '../components/SkillsEditor';
 import WorksEditor from '../components/WorksEditor';
 import ContactEditor from '../components/ContactEditor';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 export default function Dashboard({ token, onLogout }) {
   const [activeTab, setActiveTab] = useState('profile');

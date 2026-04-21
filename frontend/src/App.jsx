@@ -9,7 +9,7 @@ import Skills from './pages/Skills';
 import Contact from './pages/Contact';
 import AdminPortal from './pages/AdminPortal';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 function PublicApp() {
   const [data, setData] = useState(null);
@@ -63,7 +63,7 @@ function PublicApp() {
           <h2 style={{ color: 'var(--gold)', marginBottom: '1rem' }}>⚠️ Error</h2>
           <p>{error}</p>
           <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: 'var(--text-muted)' }}>
-            Make sure the backend is running on http://localhost:5000
+            Make sure the backend is reachable at {API_URL}
           </p>
         </div>
       </div>
