@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
@@ -18,6 +18,10 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
   });
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  useEffect(() => {
+    setWorks(data.works || []);
+  }, [data.works]);
 
   const handleNewWorkChange = (field, value) => {
     setNewWork({ ...newWork, [field]: value });
@@ -178,6 +182,10 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
         await axios.delete(`${API_URL}/admin/works/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        setWorks(prev => prev.filter(work => work.id !== id));
+        if (editingId === id) {
+          setEditingId(null);
+        }
         onMessage('✅ Work deleted successfully!');
         onUpdate();
       } catch (error) {

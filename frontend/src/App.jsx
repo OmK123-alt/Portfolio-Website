@@ -16,20 +16,46 @@ function PublicApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/public/portfolio`);
-        setData(response.data);
-      } catch (err) {
-        console.error('Error fetching data:', err);
-        setError('Failed to load portfolio data');
-      } finally {
+  const fetchData = async ({ silent = false } = {}) => {
+    if (!silent) {
+      setLoading(true);
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/public/portfolio`);
+      setData(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load portfolio data');
+    } finally {
+      if (!silent) {
         setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    const refreshInterval = setInterval(() => {
+      fetchData({ silent: true });
+    }, 15000);
+
+    const handleVisibilityOrFocusRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData({ silent: true });
       }
     };
 
-    fetchData();
+    document.addEventListener('visibilitychange', handleVisibilityOrFocusRefresh);
+    window.addEventListener('focus', handleVisibilityOrFocusRefresh);
+
+    return () => {
+      clearInterval(refreshInterval);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocusRefresh);
+      window.removeEventListener('focus', handleVisibilityOrFocusRefresh);
+    };
   }, []);
 
   if (loading) {
