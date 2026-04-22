@@ -95,8 +95,8 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
     const hasVideo = newWork.videoType === 'upload'
       ? !!newWork.videoFile || !!newWork.videoUrl
       : !!newWork.videoUrl;
-    if (!newWork.title || !newWork.thumbnail || !hasVideo) {
-      onMessage('❌ Title, thumbnail URL, and either video link or upload are required');
+    if (!newWork.title || !hasVideo) {
+      onMessage('❌ Title and either video link or upload are required');
       return;
     }
 
@@ -140,8 +140,8 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
     const work = works.find(w => w.id === id);
     const workVideoType = work.videoType || (work.videoFile ? 'upload' : 'link');
     const hasVideo = workVideoType === 'upload' ? !!work.videoFile || !!work.videoUrl : !!work.videoUrl;
-    if (!work.title || !work.thumbnail || !hasVideo) {
-      onMessage('❌ Title, thumbnail URL, and either video link or upload are required');
+    if (!work.title || !hasVideo) {
+      onMessage('❌ Title and either video link or upload are required');
       return;
     }
 
@@ -241,13 +241,12 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
         </div>
 
         <div className="form-group">
-          <label>Thumbnail URL *</label>
+          <label>Thumbnail URL</label>
           <input
             type="text"
             value={newWork.thumbnail}
             onChange={(e) => handleNewWorkChange('thumbnail', e.target.value)}
             placeholder="https://via.placeholder.com/400x300"
-            required
           />
         </div>
 
@@ -345,12 +344,11 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
                 </div>
 
                 <div className="form-group">
-                  <label>Thumbnail URL *</label>
+                  <label>Thumbnail URL</label>
                   <input
                     type="text"
                     value={work.thumbnail}
                     onChange={(e) => handleWorkChange(work.id, 'thumbnail', e.target.value)}
-                    required
                   />
                 </div>
 
