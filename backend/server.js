@@ -15,7 +15,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 initDB();
 
@@ -103,6 +103,21 @@ app.put('/api/admin/skills', verifyToken, (req, res) => {
 app.get('/api/admin/works', verifyToken, (req, res) => {
   const works = getSection('works');
   res.json(works);
+});
+
+// Upload video (data URL passthrough for lightweight deployments)
+app.post('/api/admin/upload/video', verifyToken, (req, res) => {
+  const { fileData } = req.body || {};
+
+  if (!fileData || typeof fileData !== 'string') {
+    return res.status(400).json({ error: 'Invalid video payload' });
+  }
+
+  if (!fileData.startsWith('data:video/')) {
+    return res.status(400).json({ error: 'Only video data URLs are supported' });
+  }
+
+  return res.json({ success: true, url: fileData });
 });
 
 // Add work

@@ -22,6 +22,17 @@ export default function Works({ works }) {
       );
     }
 
+    if (!work.videoUrl) {
+      return (
+        <img
+          className="work-thumbnail"
+          src={work.thumbnail}
+          alt={work.title}
+          loading="lazy"
+        />
+      );
+    }
+
     return (
       <iframe
         src={work.videoUrl}
@@ -71,7 +82,12 @@ export default function Works({ works }) {
                   <h3>{work.title}</h3>
                   <p>{work.description}</p>
                   <div className="work-meta">
-                    <span className="work-year">📅 {work.year}</span>
+                    <span className="work-year">{work.year}</span>
+                    {work.linkUrl && (
+                      <a className="work-link" href={work.linkUrl} target="_blank" rel="noreferrer">
+                        View post
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

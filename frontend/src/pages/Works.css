@@ -94,6 +94,14 @@
   object-fit: cover;
 }
 
+.work-thumbnail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .work-duration {
   position: absolute;
   bottom: 10px;
@@ -139,11 +147,23 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .work-year {
   font-size: 0.85rem;
   color: var(--text-muted);
+}
+
+.work-link {
+  color: var(--gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.work-link:hover {
+  text-decoration: underline;
 }
 
 .no-works {

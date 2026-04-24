@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+const MAX_VIDEO_SIZE_BYTES = 3 * 1024 * 1024;
 
 export default function WorksEditor({ data, token, onUpdate, onMessage }) {
   const [works, setWorks] = useState(data.works);
@@ -63,6 +64,11 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
     if (!file) {
       return;
     }
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      onMessage('❌ Video is too large. Please use a file under 3 MB or use a video link.');
+      event.target.value = '';
+      return;
+    }
     try {
       const dataUrl = await fileToDataUrl(file);
       setNewWork({ ...newWork, videoFile: dataUrl, videoUrl: '' });
@@ -84,6 +90,11 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
   const handleEditFileChange = async (id, event) => {
     const file = event.target.files?.[0];
     if (!file) {
+      return;
+    }
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      onMessage('❌ Video is too large. Please use a file under 3 MB or use a video link.');
+      event.target.value = '';
       return;
     }
     try {
@@ -112,9 +123,15 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
       };
 
       if (payload.videoType === 'upload' && payload.videoFile) {
-        const cloudinaryUrl = await uploadVideoToCloudinary(payload.videoFile);
-        payload.videoUrl = cloudinaryUrl;
-        payload.videoFile = '';
+        try {
+          const uploadedUrl = await uploadVideoToCloudinary(payload.videoFile);
+          payload.videoUrl = uploadedUrl;
+          payload.videoFile = '';
+        } catch (uploadError) {
+          onMessage('❌ Video upload failed. Please use a smaller file or a video link.');
+          setSaving(false);
+          return;
+        }
       }
 
       await axios.post(`${API_URL}/admin/works`, payload, {
@@ -157,9 +174,15 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
       };
 
       if (payload.videoType === 'upload' && payload.videoFile) {
-        const cloudinaryUrl = await uploadVideoToCloudinary(payload.videoFile);
-        payload.videoUrl = cloudinaryUrl;
-        payload.videoFile = '';
+        try {
+          const uploadedUrl = await uploadVideoToCloudinary(payload.videoFile);
+          payload.videoUrl = uploadedUrl;
+          payload.videoFile = '';
+        } catch (uploadError) {
+          onMessage('❌ Video upload failed. Please use a smaller file or a video link.');
+          setSaving(false);
+          return;
+        }
       }
 
       await axios.put(`${API_URL}/admin/works/${id}`, payload, {
