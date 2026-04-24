@@ -177,6 +177,21 @@ app.post('/api/admin/upload/video', verifyToken, (req, res) => {
   return res.json({ success: true, url: fileData });
 });
 
+// Upload image (data URL passthrough for lightweight deployments)
+app.post('/api/admin/upload/image', verifyToken, (req, res) => {
+  const { fileData } = req.body || {};
+
+  if (!fileData || typeof fileData !== 'string') {
+    return res.status(400).json({ error: 'Invalid image payload' });
+  }
+
+  if (!fileData.startsWith('data:image/')) {
+    return res.status(400).json({ error: 'Only image data URLs are supported' });
+  }
+
+  return res.json({ success: true, url: fileData });
+});
+
 // Add work
 app.post('/api/admin/works', verifyToken, (req, res) => {
   const data = readData();
