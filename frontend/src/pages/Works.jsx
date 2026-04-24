@@ -11,9 +11,24 @@ export default function Works({ works }) {
     ? works
     : works.filter(w => w.category === selectedCategory);
 
+  const getPrimaryVideoUrl = (work) => {
+    return work.primaryVideoUrl || work.videoUrl || '';
+  };
+
+  const getOptionalVideoUrls = (work) => {
+    const optional = Array.isArray(work.optionalVideoUrls)
+      ? work.optionalVideoUrls
+      : Array.isArray(work.videoLinks)
+        ? work.videoLinks
+        : [];
+    return optional.filter(Boolean).slice(0, 5);
+  };
+
   const renderVideo = (work) => {
+    const primaryVideoUrl = getPrimaryVideoUrl(work);
+
     if (work.videoType === 'upload' || work.videoFile) {
-      const videoSource = work.videoUrl || work.videoFile;
+      const videoSource = primaryVideoUrl || work.videoFile;
       return (
         <video controls preload="metadata" poster={work.thumbnail}>
           <source src={videoSource} type="video/mp4" />
@@ -22,7 +37,7 @@ export default function Works({ works }) {
       );
     }
 
-    if (!work.videoUrl) {
+    if (!primaryVideoUrl) {
       return (
         <img
           className="work-thumbnail"
@@ -35,7 +50,7 @@ export default function Works({ works }) {
 
     return (
       <iframe
-        src={work.videoUrl}
+        src={primaryVideoUrl}
         title={work.title}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
@@ -81,6 +96,21 @@ export default function Works({ works }) {
                   <span className="work-category">{work.category}</span>
                   <h3>{work.title}</h3>
                   <p>{work.description}</p>
+                  {getOptionalVideoUrls(work).length > 0 && (
+                    <div className="work-extra-links">
+                      {getOptionalVideoUrls(work).map((link, index) => (
+                        <a
+                          key={`${work.id}-optional-${index}`}
+                          className="work-link"
+                          href={link}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Video {index + 2}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   <div className="work-meta">
                     <span className="work-year">{work.year}</span>
                     {work.linkUrl && (

@@ -2,26 +2,51 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
-const MAX_VIDEO_SIZE_BYTES = 3 * 1024 * 1024;
+const MAX_OPTIONAL_VIDEO_LINKS = 5;
+const MAX_THUMBNAIL_SIZE_BYTES = 2 * 1024 * 1024;
+
+const EMPTY_WORK = {
+  title: '',
+  category: 'Educational Content',
+  description: '',
+  thumbnail: '',
+  primaryVideoUrl: '',
+  optionalVideoUrls: [],
+  duration: '',
+  year: new Date().getFullYear()
+};
+
+function normalizeOptionalVideoUrls(optionalVideoUrls) {
+  if (!Array.isArray(optionalVideoUrls)) {
+    return [];
+  }
+
+  return optionalVideoUrls
+    .map((link) => (typeof link === 'string' ? link.trim() : ''))
+    .filter(Boolean)
+    .slice(0, MAX_OPTIONAL_VIDEO_LINKS);
+}
+
+function buildEditableWork(work) {
+  const primaryVideoUrl = (work.primaryVideoUrl || work.videoUrl || '').trim();
+  const optionalVideoUrls = normalizeOptionalVideoUrls(work.optionalVideoUrls || work.videoLinks || []);
+
+  return {
+    ...work,
+    primaryVideoUrl,
+    optionalVideoUrls,
+    videoUrl: primaryVideoUrl
+  };
+}
 
 export default function WorksEditor({ data, token, onUpdate, onMessage }) {
-  const [works, setWorks] = useState(data.works);
-  const [newWork, setNewWork] = useState({
-    title: '',
-    category: 'Educational Content',
-    description: '',
-    thumbnail: '',
-    videoType: 'link',
-    videoUrl: '',
-    videoFile: '',
-    duration: '',
-    year: new Date().getFullYear()
-  });
+  const [works, setWorks] = useState((data.works || []).map(buildEditableWork));
+  const [newWork, setNewWork] = useState(EMPTY_WORK);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    setWorks(data.works || []);
+    setWorks((data.works || []).map(buildEditableWork));
   }, [data.works]);
 
   const handleNewWorkChange = (field, value) => {
@@ -29,126 +54,149 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
   };
 
   const handleWorkChange = (id, field, value) => {
-    const updated = works.map(w => w.id === id ? { ...w, [field]: value } : w);
+    const updated = works.map((w) => (w.id === id ? { ...w, [field]: value } : w));
     setWorks(updated);
+  };
+
+  const handleOptionalVideoChange = (workId, index, value, isNewWork = false) => {
+    if (isNewWork) {
+      const updated = [...newWork.optionalVideoUrls];
+      updated[index] = value;
+      setNewWork({ ...newWork, optionalVideoUrls: updated });
+      return;
+    }
+
+    const updatedWorks = works.map((work) => {
+      if (work.id !== workId) {
+        return work;
+      }
+      const nextOptional = [...(work.optionalVideoUrls || [])];
+      nextOptional[index] = value;
+      return { ...work, optionalVideoUrls: nextOptional };
+    });
+    setWorks(updatedWorks);
   };
 
   const fileToDataUrl = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error('Failed to read video file'));
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsDataURL(file);
     });
   };
 
-  const uploadVideoToCloudinary = async (fileData) => {
+  const uploadThumbnailImage = async (fileData) => {
     const response = await axios.post(
-      `${API_URL}/admin/upload/video`,
+      `${API_URL}/admin/upload/image`,
       { fileData },
       { headers: { Authorization: `Bearer ${token}` } }
     );
     return response.data.url;
   };
 
-  const handleNewWorkVideoTypeChange = (value) => {
-    if (value === 'link') {
-      setNewWork({ ...newWork, videoType: 'link', videoFile: '' });
-      return;
-    }
-    setNewWork({ ...newWork, videoType: 'upload', videoUrl: '' });
-  };
-
-  const handleNewWorkFileChange = async (event) => {
+  const handleNewThumbnailFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    if (file.size > MAX_VIDEO_SIZE_BYTES) {
-      onMessage('❌ Video is too large. Please use a file under 3 MB or use a video link.');
+
+    if (!file.type.startsWith('image/')) {
+      onMessage('❌ Please select an image file');
       event.target.value = '';
       return;
     }
-    try {
-      const dataUrl = await fileToDataUrl(file);
-      setNewWork({ ...newWork, videoFile: dataUrl, videoUrl: '' });
-    } catch (error) {
-      onMessage('❌ Could not read selected video file');
-    }
-  };
 
-  const handleEditVideoTypeChange = (id, value) => {
-    if (value === 'link') {
-      handleWorkChange(id, 'videoType', 'link');
-      handleWorkChange(id, 'videoFile', '');
+    if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
+      onMessage('❌ Thumbnail is too large. Please use an image under 2 MB.');
+      event.target.value = '';
       return;
     }
-    handleWorkChange(id, 'videoType', 'upload');
-    handleWorkChange(id, 'videoUrl', '');
+
+    try {
+      setSaving(true);
+      const dataUrl = await fileToDataUrl(file);
+      const uploadedUrl = await uploadThumbnailImage(dataUrl);
+      setNewWork((prev) => ({ ...prev, thumbnail: uploadedUrl }));
+      onMessage('✅ Thumbnail uploaded successfully');
+    } catch (error) {
+      onMessage('❌ Could not upload thumbnail image');
+    } finally {
+      setSaving(false);
+      event.target.value = '';
+    }
   };
 
-  const handleEditFileChange = async (id, event) => {
+  const handleEditThumbnailFileChange = async (id, event) => {
     const file = event.target.files?.[0];
     if (!file) {
       return;
     }
-    if (file.size > MAX_VIDEO_SIZE_BYTES) {
-      onMessage('❌ Video is too large. Please use a file under 3 MB or use a video link.');
+
+    if (!file.type.startsWith('image/')) {
+      onMessage('❌ Please select an image file');
       event.target.value = '';
       return;
     }
-    try {
-      const dataUrl = await fileToDataUrl(file);
-      handleWorkChange(id, 'videoFile', dataUrl);
-      handleWorkChange(id, 'videoUrl', '');
-    } catch (error) {
-      onMessage('❌ Could not read selected video file');
+
+    if (file.size > MAX_THUMBNAIL_SIZE_BYTES) {
+      onMessage('❌ Thumbnail is too large. Please use an image under 2 MB.');
+      event.target.value = '';
+      return;
     }
+
+    try {
+      setSaving(true);
+      const dataUrl = await fileToDataUrl(file);
+      const uploadedUrl = await uploadThumbnailImage(dataUrl);
+      handleWorkChange(id, 'thumbnail', uploadedUrl);
+      onMessage('✅ Thumbnail uploaded successfully');
+    } catch (error) {
+      onMessage('❌ Could not upload thumbnail image');
+    } finally {
+      setSaving(false);
+      event.target.value = '';
+    }
+  };
+
+  const validateWork = (work) => {
+    if (!work.title || !work.title.trim()) {
+      return '❌ Title is required';
+    }
+
+    if (!work.primaryVideoUrl || !work.primaryVideoUrl.trim()) {
+      return '❌ Primary video link is required for every work';
+    }
+
+    return null;
+  };
+
+  const buildPayload = (work) => {
+    const optionalVideoUrls = normalizeOptionalVideoUrls(work.optionalVideoUrls);
+    const primaryVideoUrl = work.primaryVideoUrl.trim();
+
+    return {
+      ...work,
+      primaryVideoUrl,
+      optionalVideoUrls,
+      videoUrl: primaryVideoUrl
+    };
   };
 
   const addWork = async () => {
-    const hasVideo = newWork.videoType === 'upload'
-      ? !!newWork.videoFile || !!newWork.videoUrl
-      : !!newWork.videoUrl;
-    if (!newWork.title || !hasVideo) {
-      onMessage('❌ Title and either video link or upload are required');
+    const validationError = validateWork(newWork);
+    if (validationError) {
+      onMessage(validationError);
       return;
     }
 
     setSaving(true);
     try {
-      const payload = {
-        ...newWork,
-        videoType: newWork.videoType === 'upload' ? 'upload' : 'link'
-      };
-
-      if (payload.videoType === 'upload' && payload.videoFile) {
-        try {
-          const uploadedUrl = await uploadVideoToCloudinary(payload.videoFile);
-          payload.videoUrl = uploadedUrl;
-          payload.videoFile = '';
-        } catch (uploadError) {
-          onMessage('❌ Video upload failed. Please use a smaller file or a video link.');
-          setSaving(false);
-          return;
-        }
-      }
-
-      await axios.post(`${API_URL}/admin/works`, payload, {
+      await axios.post(`${API_URL}/admin/works`, buildPayload(newWork), {
         headers: { Authorization: `Bearer ${token}` }
       });
       onMessage('✅ Work added successfully!');
-      setNewWork({
-        title: '',
-        category: 'Educational Content',
-        description: '',
-        thumbnail: '',
-        videoType: 'link',
-        videoUrl: '',
-        videoFile: '',
-        duration: '',
-        year: new Date().getFullYear()
-      });
+      setNewWork(EMPTY_WORK);
       onUpdate();
     } catch (error) {
       onMessage('❌ Error adding work: ' + error.message);
@@ -158,34 +206,16 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
   };
 
   const saveWork = async (id) => {
-    const work = works.find(w => w.id === id);
-    const workVideoType = work.videoType || (work.videoFile ? 'upload' : 'link');
-    const hasVideo = workVideoType === 'upload' ? !!work.videoFile || !!work.videoUrl : !!work.videoUrl;
-    if (!work.title || !hasVideo) {
-      onMessage('❌ Title and either video link or upload are required');
+    const work = works.find((w) => w.id === id);
+    const validationError = validateWork(work);
+    if (validationError) {
+      onMessage(validationError);
       return;
     }
 
     setSaving(true);
     try {
-      const payload = {
-        ...work,
-        videoType: workVideoType
-      };
-
-      if (payload.videoType === 'upload' && payload.videoFile) {
-        try {
-          const uploadedUrl = await uploadVideoToCloudinary(payload.videoFile);
-          payload.videoUrl = uploadedUrl;
-          payload.videoFile = '';
-        } catch (uploadError) {
-          onMessage('❌ Video upload failed. Please use a smaller file or a video link.');
-          setSaving(false);
-          return;
-        }
-      }
-
-      await axios.put(`${API_URL}/admin/works/${id}`, payload, {
+      await axios.put(`${API_URL}/admin/works/${id}`, buildPayload(work), {
         headers: { Authorization: `Bearer ${token}` }
       });
       onMessage('✅ Work updated successfully!');
@@ -205,7 +235,7 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
         await axios.delete(`${API_URL}/admin/works/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setWorks(prev => prev.filter(work => work.id !== id));
+        setWorks((prev) => prev.filter((work) => work.id !== id));
         if (editingId === id) {
           setEditingId(null);
         }
@@ -221,7 +251,6 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
 
   return (
     <div className="editor-container">
-      {/* Add New Work */}
       <div className="editor-section">
         <h2>Add New Work</h2>
 
@@ -246,6 +275,9 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
               <option>Motion Graphics</option>
               <option>Social Media</option>
               <option>Commercial</option>
+              <option>Photography</option>
+              <option>Event Photography</option>
+              <option>Video Editing</option>
               <option>Other</option>
             </select>
           </div>
@@ -277,59 +309,47 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
             type="text"
             value={newWork.thumbnail}
             onChange={(e) => handleNewWorkChange('thumbnail', e.target.value)}
-            placeholder="https://via.placeholder.com/400x300"
+            placeholder="https://..."
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleNewThumbnailFileChange}
+            disabled={saving}
+            style={{ marginTop: '0.75rem' }}
           />
         </div>
 
         <div className="form-group">
-          <label>Video Source *</label>
-          <div className="form-row">
-            <button
-              type="button"
-              className={`btn btn-small ${newWork.videoType === 'link' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => handleNewWorkVideoTypeChange('link')}
-            >
-              Use Link
-            </button>
-            <button
-              type="button"
-              className={`btn btn-small ${newWork.videoType === 'upload' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => handleNewWorkVideoTypeChange('upload')}
-            >
-              Upload Video
-            </button>
-          </div>
-        </div>
-
-        {newWork.videoType === 'link' ? (
-        <div className="form-group">
-          <label>Video Link *</label>
+          <label>Primary Video Link *</label>
           <input
             type="text"
-            value={newWork.videoUrl}
-            onChange={(e) => handleNewWorkChange('videoUrl', e.target.value)}
+            value={newWork.primaryVideoUrl}
+            onChange={(e) => handleNewWorkChange('primaryVideoUrl', e.target.value)}
             placeholder="https://www.youtube.com/embed/..."
-            required
           />
         </div>
-        ) : (
-          <div className="form-group">
-            <label>Upload Video File *</label>
-            <input
-              type="file"
-              accept="video/*"
-              onChange={handleNewWorkFileChange}
-              required
-            />
+
+        <div className="form-group">
+          <label>Optional Video Links (up to 5)</label>
+          <div className="optional-links-grid">
+            {Array.from({ length: MAX_OPTIONAL_VIDEO_LINKS }).map((_, index) => (
+              <input
+                key={`new-work-optional-${index}`}
+                type="text"
+                value={newWork.optionalVideoUrls[index] || ''}
+                onChange={(e) => handleOptionalVideoChange(null, index, e.target.value, true)}
+                placeholder={`Optional video link ${index + 1}`}
+              />
+            ))}
           </div>
-        )}
+        </div>
 
         <button onClick={addWork} className="btn btn-primary" disabled={saving}>
           {saving ? 'Adding...' : '+ Add New Work'}
         </button>
       </div>
 
-      {/* Existing Works */}
       <div className="editor-section">
         <h2>Existing Works ({works.length})</h2>
 
@@ -343,7 +363,7 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
             {editingId === work.id ? (
               <div className="work-edit-form">
                 <div className="form-group">
-                  <label>Title</label>
+                  <label>Title *</label>
                   <input
                     type="text"
                     value={work.title}
@@ -361,6 +381,9 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
                     <option>Motion Graphics</option>
                     <option>Social Media</option>
                     <option>Commercial</option>
+                    <option>Photography</option>
+                    <option>Event Photography</option>
+                    <option>Video Editing</option>
                     <option>Other</option>
                   </select>
                 </div>
@@ -378,51 +401,42 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
                   <label>Thumbnail URL</label>
                   <input
                     type="text"
-                    value={work.thumbnail}
+                    value={work.thumbnail || ''}
                     onChange={(e) => handleWorkChange(work.id, 'thumbnail', e.target.value)}
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleEditThumbnailFileChange(work.id, e)}
+                    disabled={saving}
+                    style={{ marginTop: '0.75rem' }}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Video Source *</label>
-                  <div className="form-row">
-                    <button
-                      type="button"
-                      className={`btn btn-small ${(work.videoType || (work.videoFile ? 'upload' : 'link')) === 'link' ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => handleEditVideoTypeChange(work.id, 'link')}
-                    >
-                      Use Link
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn btn-small ${(work.videoType || (work.videoFile ? 'upload' : 'link')) === 'upload' ? 'btn-primary' : 'btn-secondary'}`}
-                      onClick={() => handleEditVideoTypeChange(work.id, 'upload')}
-                    >
-                      Upload Video
-                    </button>
-                  </div>
+                  <label>Primary Video Link *</label>
+                  <input
+                    type="text"
+                    value={work.primaryVideoUrl || ''}
+                    onChange={(e) => handleWorkChange(work.id, 'primaryVideoUrl', e.target.value)}
+                    placeholder="https://www.youtube.com/embed/..."
+                  />
                 </div>
 
-                {(work.videoType || (work.videoFile ? 'upload' : 'link')) === 'link' ? (
-                  <div className="form-group">
-                    <label>Video Link *</label>
-                    <input
-                      type="text"
-                      value={work.videoUrl || ''}
-                      onChange={(e) => handleWorkChange(work.id, 'videoUrl', e.target.value)}
-                      required
-                    />
+                <div className="form-group">
+                  <label>Optional Video Links (up to 5)</label>
+                  <div className="optional-links-grid">
+                    {Array.from({ length: MAX_OPTIONAL_VIDEO_LINKS }).map((_, index) => (
+                      <input
+                        key={`${work.id}-optional-${index}`}
+                        type="text"
+                        value={work.optionalVideoUrls?.[index] || ''}
+                        onChange={(e) => handleOptionalVideoChange(work.id, index, e.target.value)}
+                        placeholder={`Optional video link ${index + 1}`}
+                      />
+                    ))}
                   </div>
-                ) : (
-                  <div className="form-group">
-                    <label>Upload Video File *</label>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => handleEditFileChange(work.id, e)}
-                    />
-                  </div>
-                )}
+                </div>
 
                 <div className="work-actions">
                   <button
@@ -446,6 +460,8 @@ export default function WorksEditor({ data, token, onUpdate, onMessage }) {
                 <p><strong>Description:</strong> {work.description}</p>
                 <p><strong>Duration:</strong> {work.duration}</p>
                 <p><strong>Year:</strong> {work.year}</p>
+                <p><strong>Primary Video:</strong> {work.primaryVideoUrl || work.videoUrl || '-'}</p>
+                <p><strong>Optional Videos:</strong> {normalizeOptionalVideoUrls(work.optionalVideoUrls).length}</p>
 
                 <div className="work-actions">
                   <button

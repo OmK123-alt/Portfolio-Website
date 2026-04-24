@@ -5,6 +5,7 @@ export default function Home({ data }) {
   if (!data) return null;
 
   const { profile, hero } = data;
+  const getPrimaryVideoUrl = (work) => work?.primaryVideoUrl || work?.videoUrl || '';
 
   return (
     <div className="home">
@@ -76,9 +77,15 @@ export default function Home({ data }) {
                 <div className="work-thumbnail">
                   <img src={work.thumbnail} alt={work.title} />
                   <div className="work-overlay">
-                    <a href={work.videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-small">
-                      Watch Video
-                    </a>
+                    {getPrimaryVideoUrl(work) ? (
+                      <a href={getPrimaryVideoUrl(work)} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-small">
+                        Watch Video
+                      </a>
+                    ) : (
+                      <Link to="/works" className="btn btn-primary btn-small">
+                        View Details
+                      </Link>
+                    )}
                   </div>
                 </div>
                 <div className="work-info">
