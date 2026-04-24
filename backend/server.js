@@ -19,6 +19,63 @@ app.use(express.json({ limit: '10mb' }));
 
 initDB();
 
+const MAX_OPTIONAL_VIDEO_LINKS = 5;
+
+function normalizeVideoLink(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeOptionalVideoLinks(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(normalizeVideoLink)
+    .filter(Boolean)
+    .slice(0, MAX_OPTIONAL_VIDEO_LINKS);
+}
+
+function buildWorkPayload(payload, existingWork = {}) {
+  const primaryVideoUrl = normalizeVideoLink(
+    payload.primaryVideoUrl || payload.videoUrl || existingWork.primaryVideoUrl || existingWork.videoUrl
+  );
+
+  const optionalFromPayload = payload.optionalVideoUrls ?? payload.videoLinks;
+  const optionalVideoUrls = normalizeOptionalVideoLinks(
+    optionalFromPayload ?? existingWork.optionalVideoUrls ?? existingWork.videoLinks
+  );
+
+  return {
+    ...existingWork,
+    ...payload,
+    primaryVideoUrl,
+    optionalVideoUrls,
+    // Keep legacy key in sync for compatibility with existing clients.
+    videoUrl: primaryVideoUrl
+  };
+}
+
+function validateWorkPayload(payload) {
+  if (!payload.title || typeof payload.title !== 'string' || !payload.title.trim()) {
+    return 'Title is required';
+  }
+
+  if (!payload.primaryVideoUrl) {
+    return 'Primary video link is required';
+  }
+
+  if (!Array.isArray(payload.optionalVideoUrls)) {
+    return 'Optional video links must be an array';
+  }
+
+  if (payload.optionalVideoUrls.length > MAX_OPTIONAL_VIDEO_LINKS) {
+    return `You can add up to ${MAX_OPTIONAL_VIDEO_LINKS} optional video links`;
+  }
+
+  return null;
+}
+
 // ═══════════════════════════════════════════════════════
 // PUBLIC ROUTES
 // ═══════════════════════════════════════════════════════
@@ -123,9 +180,16 @@ app.post('/api/admin/upload/video', verifyToken, (req, res) => {
 // Add work
 app.post('/api/admin/works', verifyToken, (req, res) => {
   const data = readData();
+  const normalizedWork = buildWorkPayload(req.body);
+  const validationError = validateWorkPayload(normalizedWork);
+
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
   const newWork = {
     id: Math.max(...data.works.map(w => w.id), 0) + 1,
-    ...req.body,
+    ...normalizedWork,
     createdAt: new Date().toISOString()
   };
   data.works.push(newWork);
@@ -147,7 +211,14 @@ app.put('/api/admin/works/:id', verifyToken, (req, res) => {
     return res.status(404).json({ error: 'Work not found' });
   }
 
-  data.works[index] = { ...data.works[index], ...req.body };
+  const normalizedWork = buildWorkPayload(req.body, data.works[index]);
+  const validationError = validateWorkPayload(normalizedWork);
+
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
+  data.works[index] = normalizedWork;
   if (writeData(data)) {
     res.json({ success: true, message: '✅ Work updated!' });
   } else {

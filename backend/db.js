@@ -56,7 +56,9 @@ const DEFAULT_DATA = {
       category: "Photography",
       description: "Automotive event coverage focused on raw power, design, and emotion across Underground 9th Edition, India Bike Week 2024, Cars & Coffee by Pune Supercar Club, Pitstop by Symbhav, and Piston Wolves meets.",
       thumbnail: "/portfolio/automotive-photography.jpg",
-      videoUrl: "",
+      primaryVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      optionalVideoUrls: [],
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       duration: "Event coverage",
       year: 2024
     },
@@ -66,7 +68,9 @@ const DEFAULT_DATA = {
       category: "Event Photography",
       description: "Covered Tapaswi Racing's high-adrenaline automotive event featuring national car communities, custom builders, superbike groups, professional drift talent, and Bajaj Pulsar NS 400 stunt showcases.",
       thumbnail: "/portfolio/underground-9-edition.jpg",
-      videoUrl: "",
+      primaryVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      optionalVideoUrls: [],
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       duration: "Event story",
       year: 2024
     },
@@ -76,6 +80,10 @@ const DEFAULT_DATA = {
       category: "Social Media",
       description: "Managed a Formula Student team's Instagram for two years, growing from around 1,000 to 2,000 followers, reaching up to 610k views on a single reel, and supporting a People's Choice Award nomination.",
       thumbnail: "/portfolio/team-screwdrivers-social.jpg",
+      primaryVideoUrl: "https://drive.google.com/file/d/17mu43WtaPN7SmJu5azkKWuwCckykVin8/preview",
+      optionalVideoUrls: [
+        "https://www.instagram.com/p/C3aIoSCyPHn/?igsh=ZGJmamlzaWh0OTho"
+      ],
       videoUrl: "https://drive.google.com/file/d/17mu43WtaPN7SmJu5azkKWuwCckykVin8/preview",
       linkUrl: "https://www.instagram.com/p/C3aIoSCyPHn/?igsh=ZGJmamlzaWh0OTho",
       duration: "2 years",
@@ -87,7 +95,9 @@ const DEFAULT_DATA = {
       category: "Video Editing",
       description: "Freelance trial work for Softcadd Consultancy & Services and a food-based vlogging page, creating three reels, crossing 50k views on each reel, and operating a Canon 2000D for shoots.",
       thumbnail: "/portfolio/freelance-video-work.jpg",
-      videoUrl: "",
+      primaryVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      optionalVideoUrls: [],
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       duration: "3 reels",
       year: 2024
     },
@@ -97,7 +107,9 @@ const DEFAULT_DATA = {
       category: "Video Editing",
       description: "Current video editor, social media handler, and technical head work covering 50+ education reels, audio edits, long and short edits, Photoshop/CorelDraw carousel design, DaVinci Resolve editing, camera handling, Meta Business Suite, SEO captions, and Zoho CRM practice.",
       thumbnail: "/portfolio/sharda-academy-media.jpg",
-      videoUrl: "",
+      primaryVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      optionalVideoUrls: [],
+      videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       duration: "50+ reels",
       year: 2026
     }
