@@ -1,10 +1,21 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { createClient } from '@supabase/supabase-js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, 'data.json');
 const IS_VERCEL = process.env.VERCEL === '1';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'portfolio_data';
+const SUPABASE_ROW_ID = 1;
+const HAS_SUPABASE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
+const supabase = HAS_SUPABASE
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
+  : null;
 
 // Default portfolio data structure
 const DEFAULT_DATA = {
@@ -150,8 +161,62 @@ const cloneDefaultData = () => JSON.parse(JSON.stringify(DEFAULT_DATA));
 let useMemoryStore = false;
 let memoryData = cloneDefaultData();
 
+async function ensureSupabaseSeedRow() {
+  const { data, error } = await supabase
+    .from(SUPABASE_TABLE)
+    .select('id')
+    .eq('id', SUPABASE_ROW_ID)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase read failed: ${error.message}`);
+  }
+
+  if (!data) {
+    const insertResult = await supabase
+      .from(SUPABASE_TABLE)
+      .insert({ id: SUPABASE_ROW_ID, data: cloneDefaultData() });
+
+    if (insertResult.error) {
+      throw new Error(`Supabase seed failed: ${insertResult.error.message}`);
+    }
+  }
+}
+
+async function readFromSupabase() {
+  const { data, error } = await supabase
+    .from(SUPABASE_TABLE)
+    .select('data')
+    .eq('id', SUPABASE_ROW_ID)
+    .single();
+
+  if (error) {
+    throw new Error(`Supabase read failed: ${error.message}`);
+  }
+
+  return data?.data || cloneDefaultData();
+}
+
+async function writeToSupabase(nextData) {
+  const { error } = await supabase
+    .from(SUPABASE_TABLE)
+    .update({ data: nextData, updated_at: new Date().toISOString() })
+    .eq('id', SUPABASE_ROW_ID);
+
+  if (error) {
+    throw new Error(`Supabase write failed: ${error.message}`);
+  }
+
+  return true;
+}
+
 // Initialize database
-export function initDB() {
+export async function initDB() {
+  if (HAS_SUPABASE) {
+    await ensureSupabaseSeedRow();
+    return;
+  }
+
   if (useMemoryStore) {
     return;
   }
@@ -178,7 +243,11 @@ export function initDB() {
 }
 
 // Read data
-export function readData() {
+export async function readData() {
+  if (HAS_SUPABASE) {
+    return readFromSupabase();
+  }
+
   if (useMemoryStore) {
     return memoryData;
   }
@@ -199,7 +268,11 @@ export function readData() {
 }
 
 // Write data
-export function writeData(data) {
+export async function writeData(data) {
+  if (HAS_SUPABASE) {
+    return writeToSupabase(data);
+  }
+
   if (useMemoryStore) {
     memoryData = data;
     return true;
@@ -221,16 +294,18 @@ export function writeData(data) {
 }
 
 // Get section
-export function getSection(section) {
-  const data = readData();
+export async function getSection(section) {
+  const data = await readData();
   return data[section] || null;
 }
 
 // Update section
-export function updateSection(section, newData) {
-  const data = readData();
+export async function updateSection(section, newData) {
+  const data = await readData();
   data[section] = newData;
-  return writeData(data);
+  return await writeData(data);
 }
 
-initDB();
+export function isSupabaseEnabled() {
+  return HAS_SUPABASE;
+}

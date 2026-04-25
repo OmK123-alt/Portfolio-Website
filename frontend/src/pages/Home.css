@@ -123,10 +123,13 @@
 }
 
 .work-thumbnail img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .work-preview-card:hover .work-thumbnail img {

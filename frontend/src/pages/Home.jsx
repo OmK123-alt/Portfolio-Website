@@ -75,7 +75,7 @@ export default function Home({ data }) {
             {data?.works?.slice(0, 3).map((work) => (
               <div key={work.id} className="work-preview-card">
                 <div className="work-thumbnail">
-                  <img src={work.thumbnail} alt={work.title} />
+                  <img src={work.thumbnail} alt={work.title} loading="lazy" decoding="async" draggable="false" />
                   <div className="work-overlay">
                     {getPrimaryVideoUrl(work) ? (
                       <a href={getPrimaryVideoUrl(work)} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-small">

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -15,6 +15,7 @@ function PublicApp() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const lastDataSnapshotRef = useRef('');
 
   const fetchData = async ({ silent = false } = {}) => {
     if (!silent) {
@@ -23,7 +24,13 @@ function PublicApp() {
 
     try {
       const response = await axios.get(`${API_URL}/public/portfolio`);
-      setData(response.data);
+      const snapshot = JSON.stringify(response.data);
+
+      // Avoid replacing state when payload is unchanged to prevent image flicker.
+      if (snapshot !== lastDataSnapshotRef.current) {
+        lastDataSnapshotRef.current = snapshot;
+        setData(response.data);
+      }
       setError(null);
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -40,7 +47,7 @@ function PublicApp() {
 
     const refreshInterval = setInterval(() => {
       fetchData({ silent: true });
-    }, 15000);
+    }, 60000);
 
     const handleVisibilityOrFocusRefresh = () => {
       if (document.visibilityState === 'visible') {

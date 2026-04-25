@@ -12,6 +12,26 @@ npm run dev
 
 Runs on: http://localhost:5000
 
+## Supabase Setup (Required for persistent admin edits)
+
+1. Create a Supabase project.
+2. In SQL Editor, run:
+
+```sql
+create table if not exists public.portfolio_data (
+   id integer primary key,
+   data jsonb not null,
+   updated_at timestamptz default now()
+);
+```
+
+3. In backend environment variables, set:
+    - SUPABASE_URL
+    - SUPABASE_SERVICE_ROLE_KEY
+    - SUPABASE_TABLE (optional, default: portfolio_data)
+
+Important: Use the service role key only in backend/server environments. Never expose it in frontend code.
+
 ## Deploy to Vercel
 
 1. Push this folder to a GitHub repo (e.g. `portfolio-backend`)
@@ -20,6 +40,9 @@ Runs on: http://localhost:5000
    - `ADMIN_EMAIL`
    - `ADMIN_PASSWORD`
    - `JWT_SECRET`
+   - `SUPABASE_URL`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_TABLE` (optional)
 4. Deploy — Vercel auto-detects `vercel.json`
 
 ## Frontend Connection
@@ -40,6 +63,9 @@ Do not point the frontend at the frontend deployment domain itself.
 | ADMIN_EMAIL     | Login email for admin panel        |
 | ADMIN_PASSWORD  | Login password for admin panel     |
 | JWT_SECRET      | Secret key for JWT tokens          |
+| SUPABASE_URL    | Supabase project URL               |
+| SUPABASE_SERVICE_ROLE_KEY | Backend-only service role key |
+| SUPABASE_TABLE  | JSON storage table name (optional) |
 
 ## API Endpoints
 

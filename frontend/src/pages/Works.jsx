@@ -44,6 +44,8 @@ export default function Works({ works }) {
           src={work.thumbnail}
           alt={work.title}
           loading="lazy"
+          decoding="async"
+          draggable="false"
         />
       );
     }

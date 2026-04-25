@@ -97,9 +97,12 @@
 .work-thumbnail {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 .work-duration {
